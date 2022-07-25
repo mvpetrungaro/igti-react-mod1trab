@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
+    <div class="spinner-container" style="display:none;">
+      <div class="spinner"></div>
+      <br/>
+      Loading...
+    </div>
     <header>
       <h1>Make Up Catalog</h1>
     </header>
@@ -32,11 +37,11 @@
         <div class="form-control">
           <label for="sort"></label>
           <select id="sort-type">
-            <option>Melhor Avaliados</option>
-            <option>Menores Preços</option>
-            <option>Maiores Preços</option>
-            <option>A-Z</option>
-            <option>Z-A</option>
+            <option value="Rating">Melhor Avaliados</option>
+            <option value="PriceAsc">Menores Preços</option>
+            <option value="PriceDesc">Maiores Preços</option>
+            <option value="NameAsc">A-Z</option>
+            <option value="NameDesc">Z-A</option>
           </select>
         </div>
       </form>
