@@ -1,4 +1,5 @@
-const api = 'https://makeup-api.herokuapp.com/api/v1/products.json?product_type=blush'
+const api = 'https://makeup-api.herokuapp.com/api/v1/products.json'
+//const api = 'http://localhost:8080/data/products.json'
 const currencyFormatter = Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const unique = (v, i, s) => !!v && s.indexOf(v) === i
 
@@ -12,9 +13,6 @@ let nameFilterTimer = null
 let lastNameFilterEvaluated = ''
 
 let allProducts = []
-let filteredProducts = []
-let brandsList = []
-let typesList = []
 
 init()
 
@@ -25,14 +23,18 @@ function init() {
   .then(res => res.json())
   .then(sortProductsByRating)
   .then(products => {
+    products.forEach(p => p.name = p.name.trim())
     allProducts = products
-    filteredProducts = products
     return products
   })
   .then(products => {
+    console.log('loading...')
     loadProducts()
+    console.log('loaded products')
     loadBrandsFilter(products.map(p => p.brand).filter(unique).sort())
+    console.log('loaded brands filter')
     loadTypesFilter(products.map(p => p.product_type).filter(unique).sort())
+    console.log('loaded types filter')
   })
   .then(() => loading(false))
   .catch(err => {
@@ -52,10 +54,12 @@ function init() {
         filterProducts()
       }
       nameFilterTimer = null
-    }, 2000)
+    }, 500)
   })
 
   sortOption.addEventListener('change', sortProducts)
+
+  console.log('Initialized')
 }
 
 function sortProducts() {
@@ -63,31 +67,37 @@ function sortProducts() {
 
   switch (sortType) {
     case "PriceAsc": {
-      filteredProducts = sortProductsByPrice(filteredProducts)
+      allProducts = sortProductsByPrice(allProducts)
       break
     }
 
     case "PriceDesc": {
-      filteredProducts = sortProductsByPrice(filteredProducts, -1)
+      allProducts = sortProductsByPrice(allProducts, -1)
       break
     }
 
     case "NameAsc": {
-      filteredProducts = sortProductsByName(filteredProducts)
+      allProducts = sortProductsByName(allProducts)
       break
     }
 
     case "NameDesc": {
-      filteredProducts = sortProductsByName(filteredProducts, -1)
+      allProducts = sortProductsByName(allProducts, -1)
       break
     }
 
     default: {
-      filteredProducts = sortProductsByRating(filteredProducts)
+      allProducts = sortProductsByRating(allProducts)
     }
   }
 
-  loadProducts()
+  updateProductsOrder()
+}
+
+function updateProductsOrder() {
+  for (let i = 0; i < allProducts.length; i++) {
+    document.querySelector(`div.product[tabindex="${allProducts[i].id}"]`).style.order = i
+  }
 }
 
 function capitalize(text) {
@@ -120,8 +130,7 @@ function loading(status) {
 }
 
 function loadProducts() {
-  catalog.innerHTML = "";
-  filteredProducts.forEach(loadProduct)
+  catalog.innerHTML = allProducts.map(loadProduct).join('')
 }
 
 function sortProductsByRating(products, order = -1) {
@@ -138,7 +147,7 @@ function sortProductsByPrice(products, order = 1) {
 
 function loadBrandsFilter(brandsList) {
   brandsList.forEach(brand => {
-    brandFilter.appendChild(new Option(capitalize(brand), brand.toLowerCase()))
+    brandFilter.appendChild(new Option(brand, brand.toLowerCase()))
   })
 
   brandFilter.addEventListener('change', filterProducts)
@@ -146,28 +155,10 @@ function loadBrandsFilter(brandsList) {
 
 function loadTypesFilter(typesList) {
   typesList.forEach(type => {
-    typeFilter.appendChild(new Option(capitalize(type), type.toLowerCase()))
+    typeFilter.appendChild(new Option(type, type.toLowerCase()))
   })
 
   typeFilter.addEventListener('change', filterProducts)
-}
-
-//EXEMPLO DO CÓDIGO PARA UM PRODUTO
-function loadProduct(product) {
-  catalog.innerHTML += 
-  `<div class="product" data-name="${product.name}" data-brand="${product.brand}" data-type="${product.type}" tabindex="508">
-    <figure class="product-figure">
-      <img src="${product.image_link}" width="215" height="215" alt="${product.name}" onerror="javascript:this.src='img/unavailable.png'">
-    </figure>
-    <section class="product-description">
-      <h1 class="product-name">${product.name}</h1>
-      <div class="product-brands">
-        <span class="product-brand background-brand">${product.brand}</span>
-        <span class="product-brand background-price">${currencyFormatter.format(product.price*5.5)}</span>
-        <span class="product-brand">${product.rating}</span>
-      </div>
-    </section>
-  </div>`
 }
 
 function filterProducts() {
@@ -175,57 +166,83 @@ function filterProducts() {
   const brand = brandFilter.selectedOptions[0]?.value
   const type = typeFilter.selectedOptions[0]?.value
 
-  filteredProducts = allProducts
+  document.querySelectorAll('div.product').forEach(e => e.style.display = 'none')
+
+  let filter = ''
 
   if (name) {
-    filteredProducts = filteredProducts.filter(p => p.name.includes(name))
+    filter += `[data-name*="${name}"]`
   }
 
   if (brand) {
-    filteredProducts = filteredProducts.filter(p => p.brand == brand)
+    filter += `[data-brand="${brand}"]`
   }
 
   if (type) {
-    filteredProducts = filteredProducts.filter(p => p.product_type == type)
+    filter += `[data-type="${type}"]`
   }
 
-  sortProducts()
-  loadProducts()
-}
-
-function filterProductsByType(type) {
-  if (type) {
-    filteredProducts = allProducts.filter(p => p.product_type == type)
-    loadProducts()
+  if (filter) {
+    document.querySelectorAll('div.product').forEach(e => e.style.display = 'none')
+    document.querySelectorAll(`div.product${filter}`).forEach(e => e.style.display = 'block')
+  } else {
+    document.querySelectorAll('div.product').forEach(e => e.style.display = 'block')
   }
 }
 
-//EXEMPLO DO CÓDIGO PARA OS DETALHES DE UM PRODUTO
-function loadDetails(product) {
-  let details = `<section class="product-details"><div class="details-row">
-        <div>Brand</div>
-        <div class="details-bar">
-          <div class="details-bar-bg" style="width= 250">nyx</div>
-        </div>
-      </div><div class="details-row">
-        <div>Price</div>
-        <div class="details-bar">
-          <div class="details-bar-bg" style="width= 250">10.49</div>
-        </div>
-      </div><div class="details-row">
-        <div>Rating</div>
-        <div class="details-bar">
-          <div class="details-bar-bg" style="width= 250">5</div>
-        </div>
-      </div><div class="details-row">
-        <div>Category</div>
-        <div class="details-bar">
-          <div class="details-bar-bg" style="width= 250"></div>
-        </div>
-      </div><div class="details-row">
-        <div>Product_type</div>
-        <div class="details-bar">
-          <div class="details-bar-bg" style="width= 250">bronzer</div>
-        </div>
-      </div></section>`;
+function loadProduct(product) {
+  let productHTML = 
+  `<div class="product" data-name="${product.name.toLowerCase()}" data-brand="${product.brand}" data-type="${product.product_type}" tabindex="${product.id}">
+    <figure class="product-figure">
+      <img src="${product.image_link}" width="215" height="215" alt="${product.name}" onerror="javascript:this.src='img/unavailable.png'">
+    </figure>
+    <section class="product-description">
+      <h1 class="product-name">${product.name}</h1>
+      <div class="product-brands">
+        <span class="product-brand background-brand" ${!product.brand ? 'style="display:none"' : ''}>${product.brand ?? ''}</span>
+        <span class="product-brand background-price">${currencyFormatter.format(product.price*5.5)}</span>
+      </div>
+    </section>
+    ${loadProductDetails(product)}
+  </div>`
+
+  return productHTML
+}
+
+function loadProductDetails(product) {
+  let details = 
+  `<section class="product-details">
+    <div class="details-row">
+      <div>Brand</div>
+      <div class="details-bar">
+        <div class="details-bar-bg" style="width=250">${product.brand ?? '&nbsp;'}</div>
+      </div>
+    </div>
+    <div class="details-row">
+      <div>Price</div>
+      <div class="details-bar">
+        <div class="details-bar-bg" style="width=250">${product.price}</div>
+      </div>
+    </div>
+    <div class="details-row">
+      <div>Rating</div>
+      <div class="details-bar">
+        <div class="details-bar-bg" style="width=250">${product.rating ?? '&nbsp;'}</div>
+      </div>
+    </div>
+    <div class="details-row">
+      <div>Category</div>
+      <div class="details-bar">
+        <div class="details-bar-bg" style="width=250">${product.category ?? '&nbsp;'}</div>
+      </div>
+    </div>
+    <div class="details-row">
+      <div>Product Type</div>
+      <div class="details-bar">
+        <div class="details-bar-bg" style="width=250">${product.product_type ?? '&nbsp;'}</div>
+      </div>
+    </div>
+  </section>`
+
+  return details
 }
