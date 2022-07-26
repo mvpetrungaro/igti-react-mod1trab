@@ -24,22 +24,26 @@ function init() {
   .then(sortProductsByRating)
   .then(products => {
     products.forEach(p => p.name = p.name.trim())
+
     allProducts = products
-    return products
-  })
-  .then(products => {
+
     console.log('loading...')
+
     loadProducts()
     console.log('loaded products')
+
     loadBrandsFilter(products.map(p => p.brand).filter(unique).sort())
     console.log('loaded brands filter')
+
     loadTypesFilter(products.map(p => p.product_type).filter(unique).sort())
     console.log('loaded types filter')
+
+    loading(false)
   })
-  .then(() => loading(false))
   .catch(err => {
-    alert('Erro ao carregar produtos. Para mais informações, olhar o log do console.')
-    console.log(err)
+    console.err(err)
+    alert('Error loading products. For more details, check console log.')
+
     loading(false)
   })
 
@@ -59,29 +63,29 @@ function init() {
 
   sortOption.addEventListener('change', sortProducts)
 
-  console.log('Initialized')
+  console.log('initialized')
 }
 
 function sortProducts() {
   const sortType = sortOption.selectedOptions[0]?.value
 
   switch (sortType) {
-    case "PriceAsc": {
+    case 'PriceAsc': {
       allProducts = sortProductsByPrice(allProducts)
       break
     }
 
-    case "PriceDesc": {
+    case 'PriceDesc': {
       allProducts = sortProductsByPrice(allProducts, -1)
       break
     }
 
-    case "NameAsc": {
+    case 'NameAsc': {
       allProducts = sortProductsByName(allProducts)
       break
     }
 
-    case "NameDesc": {
+    case 'NameDesc': {
       allProducts = sortProductsByName(allProducts, -1)
       break
     }
@@ -105,11 +109,11 @@ function capitalize(text) {
 
   const splittedText = text.split(/[ ]+/)
   let first = true
-  let capitalizedText = ""
+  let capitalizedText = ''
 
   for (splitText of splittedText) {
     if (!first) {
-      capitalizedText += " "
+      capitalizedText += ' '
     }
 
     capitalizedText += splitText.substr(0, 1).toUpperCase() + splitText.substr(1).toLowerCase()
@@ -134,15 +138,15 @@ function loadProducts() {
 }
 
 function sortProductsByRating(products, order = -1) {
-  return products.sort((p1, p2) => ((p1.rating??0)*10 - (p2.rating??0)*10) * order)
+  return products.sort((p1, p2) => ((p1.rating ?? 0)*10 - (p2.rating ?? 0)*10) * order)
 }
 
 function sortProductsByName(products, order = 1) {
-  return products.sort((p1, p2) => (p1.name??'').localeCompare(p2.name??'') * order)
+  return products.sort((p1, p2) => (p1.name ?? '').localeCompare(p2.name ?? '') * order)
 }
 
 function sortProductsByPrice(products, order = 1) {
-  return products.sort((p1, p2) => ((p1.price??0)*100 - (p2.price??0)*100) * order)
+  return products.sort((p1, p2) => ((p1.price ?? 0)*100 - (p2.price ?? 0)*100) * order)
 }
 
 function loadBrandsFilter(brandsList) {
@@ -215,31 +219,31 @@ function loadProductDetails(product) {
     <div class="details-row">
       <div>Brand</div>
       <div class="details-bar">
-        <div class="details-bar-bg" style="width=250">${product.brand ?? '&nbsp;'}</div>
+        <div class="details-bar-bg">${product.brand ?? '&nbsp;'}</div>
       </div>
     </div>
     <div class="details-row">
       <div>Price</div>
       <div class="details-bar">
-        <div class="details-bar-bg" style="width=250">${product.price}</div>
+        <div class="details-bar-bg">${product.price}</div>
       </div>
     </div>
     <div class="details-row">
       <div>Rating</div>
       <div class="details-bar">
-        <div class="details-bar-bg" style="width=250">${product.rating ?? '&nbsp;'}</div>
+        <div class="details-bar-bg">${product.rating ?? '&nbsp;'}</div>
       </div>
     </div>
     <div class="details-row">
       <div>Category</div>
       <div class="details-bar">
-        <div class="details-bar-bg" style="width=250">${product.category ?? '&nbsp;'}</div>
+        <div class="details-bar-bg">${product.category ?? '&nbsp;'}</div>
       </div>
     </div>
     <div class="details-row">
       <div>Product Type</div>
       <div class="details-bar">
-        <div class="details-bar-bg" style="width=250">${product.product_type ?? '&nbsp;'}</div>
+        <div class="details-bar-bg">${product.product_type ?? '&nbsp;'}</div>
       </div>
     </div>
   </section>`
